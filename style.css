@@ -1,0 +1,200 @@
+/*
+body {
+  background-color: #000;
+  color: #00ffce; 
+  font-family: 'Courier New', monospace;
+  margin: 0; 
+  padding: 0;
+  text-align: center;
+} */
+/*
+body {
+  background-color: #0;
+  color: #00ffff;
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+*/
+/* Header tổng thể */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #111;
+  border-bottom: 2px solid #00ffff;
+  flex-wrap: wrap;
+}
+body {
+  background-color: #333; /* Màu tối (dễ đọc) */
+  color: #ffffff;
+  font-family: 'Courier New', monospace;
+  margin: 0;
+  padding: 0; /*
+  text-align: center; */
+}
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo img {
+  width: 40px;
+  height: 40px;
+}
+
+.logo h1 {
+  font-size: 24px;
+  color: #ffffff;
+  text-shadow: 0 0 5px #00ffff;
+  font-family: 'Courier New', monospace;
+}
+
+/* Thanh tìm kiếm */
+.search-bar {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.search-bar input {
+  padding: 8px 12px;
+  font-size: 16px;
+  border: none;
+  border-radius: 20px 0 0 20px;
+  outline: none;
+  background-color: #222;
+  color: #fff;
+  width: 200px;
+}
+
+.search-bar button {
+  padding: 8px 12px;
+  font-size: 16px;
+  border: none;
+  border-radius: 0 20px 20px 0;
+  background-color: #00ffff;
+  color: #000;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.search-bar button:hover {
+  background-color: #00dddd;
+}
+
+
+/* Container cho đồng hồ */
+.clock-container {
+  margin-top: 20px;
+  padding: 20px;
+}
+
+/* Đồng hồ thời gian */
+.time {
+  font-size: 30px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 0 5px #00ffff;
+  margin-bottom: 5px;
+}
+
+/* Ngày tháng */
+.date {
+  font-size: 18px;
+  color: #ffffff;
+  text-shadow: 0 0 5px #00ffff;
+}
+.result {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 600px;
+  margin: 20px auto;
+  border-bottom: 1px solid #ff0000;
+  padding-bottom: 15px;
+}
+
+.avatar {
+  width: 30x;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+}
+
+.url {
+  font-size: 0.85rem;
+  color#ffffff;
+  margin-top: 5px;
+}
+
+.title {
+  font-size: 1.2rem;
+  color: #1a0dab;
+  
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.title:hover {
+  text-decoration: underline;
+}
+
+.description {
+  font-size: 0.95rem;
+  color: #ffffff;
+  margin-top: 5px;
+}
+/* căn chỉnh ảnh */
+img {
+  max-width: 200px;   /* Giới hạn chiều rộng tối đa */
+  height: auto;       /* Giữ tỷ lệ ảnh */
+  margin: 10px;       /* Khoảng cách giữa các ảnh */
+  border-radius: 8px; /* Bo góc mềm mại */
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.5); /* Tạo viền sáng nhẹ */
+  display: inline-block;
+}
+
+.title {
+    display: flex;
+    align-items: center;
+    gap: 5px;         /* Khoảng cách giữa ảnh và chữ */
+    margin: 5px 0;
+}
+
+.title img {
+    width: 35px;
+    height: 35px;
+    border-radius: 4px;
+    box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+}
+/* căn chỉnh video */
+video {
+  max-width: 300px;
+  width: 100%;
+  height: auto;
+  margin: 10px auto;
+  display: block;
+  border-radius: 8px;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+}
+h1{
+  color: Orange;
+}
+/*
+.title h1 {
+font-size: 24px;
+  color: #ffffff;
+  
+  font-family: 'Courier New', monospace;
+  margin: 20px;
+  padding: 0;
+  text-align: left;
+} */

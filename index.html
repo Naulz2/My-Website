@@ -1,42 +1,56 @@
-<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Đang tối ưu hệ thống…</title>
-<style>
-  body{margin:0;display:grid;place-items:center;height:100dvh;background:#0f0f0f;color:#eee;font:16px/1.4 system-ui}
-  .box{width:min(600px,90vw);background:#181818;border:1px solid #2a2a2a;border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.4);text-align:center}
-  .bar{height:14px;background:#111;border:1px solid #333;border-radius:999px;overflow:hidden}
-  .fill{height:100%;width:0;background:linear-gradient(90deg,#ff4e45,#ffd045);transition:width .2s}
-  .msg{margin:14px 0 6px;color:#bbb}
-  .big{font-size:22px;margin-bottom:10px}
-  .hidden{display:none}
-  button{margin-top:14px;border:1px solid #333;background:#222;color:#eee;padding:10px 14px;border-radius:10px;cursor:pointer}
-</style></head><body>
-  <div class="box">
-    <div class="big">Đang tối ưu hệ thống…</div>
-    <div class="msg" id="msg">Quét bộ nhớ đệm…</div>
-    <div class="bar"><div class="fill" id="fill"></div></div>
-    <button id="cancel" class="hidden">Thôi khỏi tối ưu nữa</button>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Code Web</title>
+    <link rel="stylesheet" href="style.css">
+    <header class="header">
+  <div class="logo">
+    <img src="img/Metube-logo.png" alt="Logo" />
+    <h1>Metube</h1>
   </div>
-<script>
-  const tips = [
-    "Quét bộ nhớ đệm…","Tối ưu registry…","Nén ảnh 8K…",
-    "Gỡ bug lượng tử…","Đồng bộ đám mây…","Vệ sinh quạt tản nhiệt…"
-  ];
-  const fill = document.getElementById('fill');
-  const msg = document.getElementById('msg');
-  const btn = document.getElementById('cancel');
-  let p=0, tick=0;
-  const t = setInterval(()=>{
-    p += Math.random()*8; if(p>99) p=99;
-    fill.style.width = p+'%';
-    if(++tick%3===0) msg.textContent = tips[Math.floor(Math.random()*tips.length)];
-  }, 300);
-  setTimeout(()=>{
-    clearInterval(t);
-    fill.style.width = '100%';
-    msg.innerHTML = "🎉 XONG! … <b>ĐÙA THÔI 😆</b>";
-    btn.classList.remove('hidden');
-  }, 10000);
-  btn.onclick = ()=>location.href="https://www.youtube.com/watch?v=dQw4w9WgXcQ";
-</script>
-</body></html>
+  <form class="search-bar">
+    <input type="text" placeholder="Search Metube..." />
+    <button type="submit">🔍</button>
+  </form>
+    </header>
+</head>
+
+<body>
+  <div>
+    <div class="time" id="time">00:00:00</div>
+    <div class="date" id="date">01/01/1970
+    </div>
+  </div>
+    <script src="script.js"></script>
+
+    <h1>Minecraft</h1>
+
+    
+  <div class="title">
+    <img src="Img/GuLXqYUagAkkHZB.jpeg" alt="Wuthering Wave">
+    <h1>Wuthering Wave</h1>
+  </div>
+
+  <div class="result">
+    <img src="Img/wuthering-waves-uw6vy.jpg" alt="Wuthering Waves" class="avatar">
+    <div class="info">
+      <a href="https://wutheringwaves.kurogames.com" class="title">Wuthering Waves</a>
+      <div class="url">https://wutheringwaves.kurogames.com</div>
+      <div class="description">
+          Wuthering Waves is a story-rich open-world action RPG with a high degree of freedom. 
+        You wake from your slumber as Rover, joined by a vibrant cast of characters, 
+        embarking on an adventure in a vast and breathtaking world.
+      </div>
+    </div>
+  </div>
+    <img src="Img/Cartethyia_Card.png" alt="">
+  <video controls autoplay muted loop>
+    <source src="Cartethyia-tiktok.mp4" type="video/mp4">
+    Trình duyệt của bạn không hỗ trợ video.
+  </video>
+    <img src="Img/Carlotta_Card.png" alt="">    
+    
+</body>
+
+</html>
