@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dodge Blocks – Game HTML đơn giản</title>
+  <style>
+    :root{
+      --bg:#0b0e14; --panel:#121723; --text:#e6e6e6; --accent:#5eead4; --accent2:#a78bfa;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; background:radial-gradient(1200px 600px at 50% -10%, #132033 0%, #0b0e14 55%, #090b10 100%); color:var(--text); font-family:Inter,system-ui,Arial,sans-serif;}
+    header{max-width:980px; margin:10px auto 0; padding:12px 16px; display:flex; gap:12px; align-items:center; justify-content:space-between}
+    .brand{display:flex; align-items:center; gap:10px}
+    .logo{width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:grid; place-items:center; font-weight:800; color:#081018}
+    .wrap{max-width:980px; margin:0 auto; padding:12px 16px}
+    .panel{background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.05); box-shadow:0 10px 40px rgba(0,0,0,.35); border-radius:16px;}
+    .hud{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px}
+    .hud .stat{font-weight:700}
+    .controls{display:flex; gap:8px; flex-wrap:wrap}
+    .btn{background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); color:var(--text); padding:8px 12px; border-radius:12px; cursor:pointer}
+    .btn:active{transform:translateY(1px)}
+
+    canvas{width:100%; height:60vh; display:block; border-bottom-left-radius:16px; border-bottom-right-radius:16px}
+
+    /* Mobile touch controls */
+    .touchbar{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; padding:10px;}
+    .touchbtn{padding:14px 10px; border-radius:12px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.06); text-align:center; font-weight:700; user-select:none}
+    .hint{opacity:.75; font-size:13px; padding:0 12px 12px}
+    @media (max-width:640px){ canvas{height:56vh} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">DB</div>
+      <div>
+        <div style="font-weight:800; letter-spacing:.2px">Dodge Blocks</div>
+        <div style="font-size:12px; opacity:.75">Game HTML5/CANVAS – né chướng ngại vật</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn" id="btnPause" title="Tạm dừng (Space)">⏸️ Tạm dừng</button>
+      <button class="btn" id="btnRestart" title="Chơi lại (R)">🔄 Chơi lại</button>
+    </div>
+  </header>
+
+  <div class="wrap panel">
+    <div class="hud">
+      <div class="stat">Điểm: <span id="score">0</span></div>
+      <div class="stat">Kỷ lục: <span id="hi">0</span></div>
+      <div style="font-size:13px; opacity:.75">Điều khiển: ← → hoặc A/D • Space: tạm dừng • R: chơi lại</div>
+    </div>
+    <canvas id="game" width="960" height="540" aria-label="Game canvas"></canvas>
+    <div class="hint">Trên điện thoại: dùng nút ảo bên dưới.</div>
+    <div class="touchbar">
+      <div class="touchbtn" id="leftBtn">← Trái</div>
+      <div class="touchbtn" id="pauseBtn">⏸ / ▶</div>
+      <div class="touchbtn" id="rightBtn">Phải →</div>
+    </div>
+  </div>
+
+  <script>
+  (()=>{
+    const cvs = document.getElementById('game');
+    const ctx = cvs.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const hiEl = document.getElementById('hi');
+    const btnPause = document.getElementById('btnPause');
+    const btnRestart = document.getElementById('btnRestart');
+
+    // Responsive backing store size
+    function fitCanvas(){
+      const ratio = 16/9;
+      const w = cvs.clientWidth; // css width
+      const h = Math.round(w/ratio);
+      cvs.height = h; // internal pixels follow CSS for simplicity
+    }
+    addEventListener('resize', fitCanvas, {passive:true});
+    fitCanvas();
+
+    const rnd = (a,b)=>Math.random()*(b-a)+a;
+
+    const state = {
+      running: true,
+      over: false,
+      score: 0,
+      hiscore: Number(localStorage.getItem('dodge_hi')||0),
+      t: 0,
+      speed: 180, // px/s base fall speed
+    };
+
+    const player = {
+      x: 0, y: 0, w: 48, h: 16, vx: 0, speed: 340
+    };
+
+    const blocks = [];
+
+    function reset(){
+      state.over = false; state.score = 0; state.t = 0; state.speed = 180; blocks.length = 0;
+      player.w = Math.max(36, cvs.width*0.05);
+      player.h = Math.max(14, cvs.height*0.03);
+      player.x = cvs.width/2 - player.w/2;
+      player.y = cvs.height - player.h - 18;
+      player.vx = 0;
+      spawnBlock();
+      spawnBlock();
+      spawnBlock();
+      updateHud();
+    }
+
+    function spawnBlock(){
+      const w = rnd(40, 110);
+      blocks.push({ x: rnd(0, cvs.width - w), y: -50, w, h: rnd(14, 24), vy: state.speed });
+    }
+
+    function updateHud(){
+      scoreEl.textContent = Math.floor(state.score);
+      hiEl.textContent = state.hiscore;
+    }
+
+    const keys = { left:false, right:false };
+    addEventListener('keydown', e=>{
+      if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') keys.left = true;
+      if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') keys.right = true;
+      if (e.key === ' '){ state.running = !state.running; }
+      if (e.key.toLowerCase() === 'r'){ reset(); state.running = true; }
+    });
+    addEventListener('keyup', e=>{
+      if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') keys.left = false;
+      if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') keys.right = false;
+    });
+
+    // Touch controls
+    const leftBtn = document.getElementById('leftBtn');
+    const rightBtn = document.getElementById('rightBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const press = (el, fn)=>{
+      let down=false; const on=()=>{down=true; fn(true)}; const off=()=>{down=false; fn(false)};
+      el.addEventListener('touchstart', e=>{e.preventDefault(); on();}, {passive:false});
+      el.addEventListener('touchend', off); el.addEventListener('touchcancel', off);
+      el.addEventListener('mousedown', on); el.addEventListener('mouseup', off); el.addEventListener('mouseleave', off);
+    };
+    press(leftBtn, v=> keys.left = v);
+    press(rightBtn, v=> keys.right = v);
+    press(pauseBtn, ()=> state.running = !state.running);
+
+    btnPause.addEventListener('click', ()=> state.running = !state.running);
+    btnRestart.addEventListener('click', ()=> { reset(); state.running = true; });
+
+    function aabb(a,b){ return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
+
+    let last = performance.now();
+    function loop(now){
+      const dt = Math.min(0.033, (now - last)/1000); last = now;
+      if (state.running && !state.over){
+        update(dt);
+      }
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    function update(dt){
+      state.t += dt; state.score += dt * 10; // 10 điểm/giây
+      state.speed += dt * 6; // tăng dần độ khó
+
+      // Player move
+      player.vx = (keys.left? -1:0) + (keys.right? 1:0);
+      player.x += player.vx * player.speed * dt;
+      player.x = Math.max(0, Math.min(cvs.width - player.w, player.x));
+
+      // Spawn logic
+      if (blocks.length < 12 && Math.random() < 0.02 + state.t*0.0008) spawnBlock();
+
+      // Update blocks
+      for (let i=blocks.length-1;i>=0;i--){
+        const b = blocks[i];
+        b.vy = state.speed * (0.9 + Math.random()*0.2);
+        b.y += b.vy * dt;
+        if (b.y > cvs.height + 40){
+          blocks.splice(i,1);
+          continue;
+        }
+        if (aabb(player,b)){
+          gameOver();
+          break;
+        }
+      }
+      updateHud();
+    }
+
+    function gameOver(){
+      state.over = true; state.running = false;
+      state.hiscore = Math.max(state.hiscore, Math.floor(state.score));
+      localStorage.setItem('dodge_hi', String(state.hiscore));
+    }
+
+    function draw(){
+      const w = cvs.width, h = cvs.height;
+      // Background
+      const g = ctx.createLinearGradient(0,0,0,h);
+      g.addColorStop(0,'#0d1524'); g.addColorStop(1,'#0a0e17');
+      ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+
+      // Stars parallax
+      ctx.globalAlpha = 0.25;
+      for(let i=0;i<40;i++){
+        const x = (i*97 + Math.sin((state.t*0.15+i)*0.9)*999) % w; const y = (i*53 + state.t*20) % h;
+        ctx.fillStyle = '#9fb3ff'; ctx.fillRect(x, y, 2, 2);
+      }
+      ctx.globalAlpha = 1;
+
+      // Player
+      ctx.fillStyle = '#5eead4';
+      roundRect(ctx, player.x, player.y, player.w, player.h, 6, true);
+
+      // Blocks
+      ctx.fillStyle = '#ef4444';
+      blocks.forEach(b=> roundRect(ctx, b.x, b.y, b.w, b.h, 4, true));
+
+      // HUD overlay
+      ctx.font = '600 18px Inter, system-ui, Arial';
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.fillText('Điểm: ' + Math.floor(state.score), 16, 28);
+      ctx.fillText('Kỷ lục: ' + state.hiscore, 16, 52);
+
+      if (!state.running && !state.over){
+        banner('TẠM DỪNG', 'Bấm Space hoặc ▶ tiếp tục');
+      }
+      if (state.over){
+        banner('THUA RỒI!', 'R để chơi lại • Điểm: '+Math.floor(state.score));
+      }
+    }
+
+    function banner(title, sub){
+      const w = cvs.width, h = cvs.height;
+      ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(0,0,w,h);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'white';
+      ctx.font = '800 36px Inter, system-ui, Arial';
+      ctx.fillText(title, w/2, h/2 - 10);
+      ctx.font = '500 16px Inter, system-ui, Arial';
+      ctx.fillText(sub, w/2, h/2 + 18);
+      ctx.textAlign = 'start';
+    }
+
+    function roundRect(ctx, x, y, w, h, r, fill){
+      if (w<2*r) r = w/2; if (h<2*r) r = h/2;
+      ctx.beginPath();
+      ctx.moveTo(x+r, y);
+      ctx.arcTo(x+w, y,   x+w, y+h, r);
+      ctx.arcTo(x+w, y+h, x,   y+h, r);
+      ctx.arcTo(x,   y+h, x,   y,   r);
+      ctx.arcTo(x,   y,   x+w, y,   r);
+      ctx.closePath();
+      if (fill) ctx.fill(); else ctx.stroke();
+    }
+
+    reset();
+    requestAnimationFrame(loop);
+  })();
+  </script>
+</body>
+</html>
