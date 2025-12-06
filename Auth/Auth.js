@@ -9,3 +9,24 @@ signUpBtn.addEventListener('click', () => {
 signInBtn.addEventListener('click', () => {
     container.classList.remove('right-panel-active');
 });
+
+// Nếu đã đăng nhập rồi → chuyển trang
+if (localStorage.getItem("user")) {
+    window.location.href = "../Video/music.html";
+}
+
+function login() {
+    let user = document.getElementById("username").value;
+    let pass = document.getElementById("password").value;
+
+    if (user === "luan@gmail.com" && pass === "123") {
+
+        // Lưu thông tin đăng nhập
+        localStorage.setItem("user", user);
+
+        alert("Đăng nhập thành công!");
+        window.location.href = "../Video/music.html";
+    } else {
+        alert("Sai email hoặc mật khẩu!");
+    }
+}
