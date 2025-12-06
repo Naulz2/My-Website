@@ -164,6 +164,15 @@
   </style>
 </head>
 <body>
+<button onclick="logout()">Đăng xuất</button>
+
+<script>
+function logout() {
+    localStorage.removeItem("user");
+    window.location.href = "../Auth/Auth.html";
+}
+</script>
+
   <div class="container">
     <header>
       <h1>Playlist người & Video nhạc</h1>
