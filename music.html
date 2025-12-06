@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Danh sách người & Video nhạc</title>
+  <style>
+    :root{
+      --bg:#f4f6f8;
+      --card:#ffffff;
+      --accent:#0ea5a4;
+      --muted:#6b7280;
+    }
+    body{
+      margin:0;
+      font-family: Inter, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      color:#111827;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:28px;
+    }
+
+    .container{
+      max-width:1100px;
+      margin:0 auto;
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:20px;
+    }
+    header h1{
+      font-size:20px;
+      margin:0;
+    }
+    .controls{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .card-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+      gap:20px;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:12px;
+      box-shadow:0 6px 18px rgba(15,23,42,0.06);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .thumb {
+      position:relative;
+      width:100%;
+      padding-bottom:56.25%; /* 16:9 */
+      background:#000;
+      cursor:pointer;
+      overflow:hidden;
+    }
+    .thumb img {
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .thumb .play {
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      background:rgba(0,0,0,0.5);
+      color:white;
+      font-size:34px;
+      width:70px;
+      height:70px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 6px 18px rgba(0,0,0,0.3);
+    }
+
+    .meta{
+      padding:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .meta .name{
+      font-weight:600;
+      font-size:16px;
+    }
+    .meta .sub{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .actions{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    button, .btn {
+      background:var(--accent);
+      color:white;
+      border:0;
+      padding:8px 12px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:13px;
+    }
+    button.ghost {
+      background:transparent;
+      color:var(--accent);
+      border:1px solid rgba(14,165,164,0.16);
+    }
+
+    form.add {
+      display:flex;
+      gap:8px;
+      align-items:center;
+      background:var(--card);
+      padding:12px;
+      border-radius:10px;
+      box-shadow:0 4px 12px rgba(2,6,23,0.04);
+    }
+    form.add input[type="text"]{
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid #e6e9ee;
+      width:280px;
+      font-size:14px;
+    }
+    form.add input[type="text"].name {
+      width:180px;
+    }
+
+    .empty {
+      text-align:center;
+      color:var(--muted);
+      padding:36px;
+      border-radius:10px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3));
+      border:1px dashed #e6e9ee;
+    }
+
+    @media (max-width:520px){
+      header{flex-direction:column;align-items:stretch;}
+      form.add{flex-direction:column;align-items:stretch;}
+      form.add input[type="text"]{width:100%;}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Playlist người & Video nhạc</h1>
+      <div class="controls">
+        <!-- Form để thêm người + link video -->
+        <form id="addForm" class="add" onsubmit="return false;">
+          <input id="userName" class="name" type="text" placeholder="Tên người (ví dụ: Lan)" required />
+          <input id="videoUrl" type="text" placeholder="Link YouTube hoặc ID (vd: https://youtu.be/E5hVng18OvA)" required />
+          <button id="addBtn" class="btn">Thêm</button>
+        </form>
+      </div>
+    </header>
+
+    <main id="listArea">
+      <div id="cards" class="card-grid">
+        <!-- cards sẽ được render ở đây -->
+      </div>
+      <div id="empty" class="empty" style="display:none;">
+        Chưa có người nào. Thêm người bằng form phía trên.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    /***********************
+     * Utils
+     ***********************/
+    // Trích YouTube ID từ nhiều dạng URL
+    function extractYouTubeID(urlOrId) {
+      if(!urlOrId) return null;
+      // nếu người dùng nhập thẳng ID (chỉ ký tự hợp lệ)
+      const maybeId = urlOrId.trim();
+      // ID YouTube thường 11 ký tự (chữ số chữ cái - _)
+      const idRegexSimple = /^[A-Za-z0-9_-]{8,}$/;
+      if(idRegexSimple.test(maybeId) && !maybeId.includes('http')) {
+        return maybeId;
+      }
+
+      // các dạng URL YouTube phổ biến
+      // examples:
+      // https://youtu.be/ID
+      // https://www.youtube.com/watch?v=ID
+      // https://www.youtube.com/embed/ID
+      // https://www.youtube.com/watch?v=ID&si=...
+      // https://youtube.com/shorts/ID
+      const patterns = [
+        /youtube\.com\/watch\?v=([A-Za-z0-9_-]{8,})/,
+        /youtube\.com\/embed\/([A-Za-z0-9_-]{8,})/,
+        /youtu\.be\/([A-Za-z0-9_-]{8,})/,
+        /youtube\.com\/shorts\/([A-Za-z0-9_-]{8,})/,
+        /v=([A-Za-z0-9_-]{8,})/ // fallback: tìm param v=
+      ];
+      for(const p of patterns){
+        const m = maybeId.match(p);
+        if(m && m[1]) return m[1];
+      }
+      // nếu không match, thử lấy sau cuối của path
+      try {
+        const u = new URL(maybeId);
+        const parts = u.pathname.split('/').filter(Boolean);
+        if(parts.length) {
+          const last = parts[parts.length-1];
+          if(/^[A-Za-z0-9_-]{8,}$/.test(last)) return last;
+        }
+      } catch(e){
+        // not a URL
+      }
+      return null;
+    }
+
+    // tạo thumbnail url
+    function thumbUrl(videoId) {
+      // HQ thumbnail
+      return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    }
+
+    /***********************
+     * Data mẫu
+     ***********************/
+    let people = [
+      // bạn có thể chỉnh ở đây: { name: 'Tên', videoId: 'E5hVng18OvA' }
+      { name: 'Nguyễn Luân', videoId: 'E5hVng18OvA' },
+      { name: 'Lê Văn Tài', videoId: 'VpspAxQF2X4' }
+    ];
+
+    /***********************
+     * Render
+     ***********************/
+    const cardsEl = document.getElementById('cards');
+    const emptyEl = document.getElementById('empty');
+
+    function render() {
+      cardsEl.innerHTML = '';
+      if(people.length === 0) {
+        emptyEl.style.display = 'block';
+      } else {
+        emptyEl.style.display = 'none';
+      }
+
+      people.forEach((p, idx) => {
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.dataset.index = idx;
+
+        // thumbnail wrapper (click để load iframe)
+        const thumb = document.createElement('div');
+        thumb.className = 'thumb';
+        thumb.setAttribute('role','button');
+        thumb.setAttribute('aria-label', `Phát video của ${p.name}`);
+        thumb.tabIndex = 0;
+
+        const img = document.createElement('img');
+        img.alt = `Thumbnail video ${p.name}`;
+        img.loading = 'lazy';
+        img.src = thumbUrl(p.videoId);
+
+        const play = document.createElement('div');
+        play.className = 'play';
+        play.innerHTML = '▶';
+
+        thumb.appendChild(img);
+        thumb.appendChild(play);
+
+        // meta
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        const left = document.createElement('div');
+        left.innerHTML = `<div class="name">${escapeHtml(p.name)}</div><div class="sub">Video ID: ${escapeHtml(p.videoId)}</div>`;
+        const right = document.createElement('div');
+        right.className = 'actions';
+        const delBtn = document.createElement('button');
+        delBtn.className = 'ghost';
+        delBtn.textContent = 'Xóa';
+        delBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          removePerson(idx);
+        });
+        right.appendChild(delBtn);
+
+        meta.appendChild(left);
+        meta.appendChild(right);
+
+        card.appendChild(thumb);
+        card.appendChild(meta);
+
+        // event: click hoặc press Enter -> load iframe & autoplay (user-initiated so browsers cho phép)
+        function loadIframe() {
+          // nếu đã load thì không làm gì
+          if(card.querySelector('iframe')) return;
+          const iframe = document.createElement('iframe');
+          iframe.width = '560';
+          iframe.height = '315';
+          // autoplay=1 để phát khi click (đây là tương tác người dùng)
+          iframe.src = `https://www.youtube.com/embed/${p.videoId}?rel=0&autoplay=1`;
+          iframe.title = `YouTube video of ${p.name}`;
+          iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+          iframe.allowFullscreen = true;
+          // làm cho iframe responsive: bọc iframe trong wrapper có vị trí absolute
+          const wrapper = document.createElement('div');
+          wrapper.style.position = 'relative';
+          wrapper.style.width = '100%';
+          wrapper.style.paddingBottom = '56.25%';
+          wrapper.style.height = '0';
+          iframe.style.position = 'absolute';
+          iframe.style.left = '0';
+          iframe.style.top = '0';
+          iframe.style.width = '100%';
+          iframe.style.height = '100%';
+          wrapper.appendChild(iframe);
+          thumb.replaceWith(wrapper);
+        }
+
+        thumb.addEventListener('click', loadIframe);
+        thumb.addEventListener('keydown', (e) => {
+          if(e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            loadIframe();
+          }
+        });
+
+        cardsEl.appendChild(card);
+      });
+    }
+
+    // escape HTML to avoid injection when showing names
+    function escapeHtml(s){
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    /***********************
+     * CRUD helpers
+     ***********************/
+    function addPerson(name, videoId) {
+      people.push({ name: name.trim(), videoId });
+      render();
+    }
+    function removePerson(index) {
+      people.splice(index,1);
+      render();
+    }
+
+    /***********************
+     * Form xử lý thêm
+     ***********************/
+    document.getElementById('addForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const nameEl = document.getElementById('userName');
+      const urlEl = document.getElementById('videoUrl');
+      const name = nameEl.value.trim();
+      const url = urlEl.value.trim();
+      if(!name || !url) return alert('Vui lòng nhập tên và link/ID video.');
+      const id = extractYouTubeID(url);
+      if(!id) return alert('Không lấy được ID từ link/ID bạn nhập. Vui lòng kiểm tra lại.');
+      addPerson(name, id);
+      // reset form
+      nameEl.value = '';
+      urlEl.value = '';
+    });
+
+    // render lần đầu
+    render();
+  </script>
+</body>
+</html>
