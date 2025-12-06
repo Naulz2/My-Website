@@ -12,7 +12,7 @@ signInBtn.addEventListener('click', () => {
 
 // Nếu đã đăng nhập rồi → chuyển trang
 if (localStorage.getItem("user")) {
-    window.location.href = "../Video/music.html";
+    window.location.href = "../music.html";
 }
 
 function login() {
@@ -25,7 +25,7 @@ function login() {
         localStorage.setItem("user", user);
 
         alert("Đăng nhập thành công!");
-        window.location.href = "../Video/music.html";
+        window.location.href = "../music.html";
     } else {
         alert("Sai email hoặc mật khẩu!");
     }
