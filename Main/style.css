@@ -21,8 +21,8 @@ body {
   color: #ffffff;
   font-family: 'Courier New', monospace;
   margin: 0;
-  padding: 0; /*
-  text-align: center; */
+  padding: 0;
+  text-align: center !important;
 }
 /* Header tổng thể */
 .header {
@@ -155,7 +155,7 @@ body {
 }
 /* căn chỉnh ảnh */
 img {
-  max-width: 200px;   /* Giới hạn chiều rộng tối đa */
+  max-width: 300px;   /* Giới hạn chiều rộng tối đa */
   height: auto;       /* Giữ tỷ lệ ảnh */
   margin: 10px;       /* Khoảng cách giữa các ảnh */
   border-radius: 8px; /* Bo góc mềm mại */
