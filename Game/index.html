@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Trò chơi: Bắt vòng tròn</title>
+  <style>
+    :root{--bg:#0f172a;--card:#0b1220;--accent:#ffcc00}
+    *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+    body{margin:0;background:linear-gradient(180deg,#041025 0%, #0b1b2a 100%);color:#e6eef8;display:flex;align-items:center;justify-content:center;height:100vh}
+    .wrap{width:920px;max-width:96%;background:rgba(255,255,255,0.03);padding:20px;border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.6)}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    h1{font-size:20px;margin:0}
+    .controls{display:flex;gap:8px;align-items:center}
+    button{background:var(--accent);border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.08);color:inherit}
+    #game{background:#071026;border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+    canvas{display:block;width:100%;height:480px}
+    .hud{display:flex;gap:12px;align-items:center}
+    .stat{background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:8px;font-weight:600}
+    footer{font-size:13px;color:#a8b6c8;margin-top:10px}
+    .center-msg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center}
+    .small{font-size:13px;color:#bcd0e6}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Trò chơi: Bắt vòng tròn (Click the Circle)</h1>
+      <div class="controls">
+        <div class="hud">
+          <div class="stat">Thời gian: <span id="time">30</span>s</div>
+          <div class="stat">Điểm: <span id="score">0</span></div>
+          <div class="stat">Cao nhất: <span id="best">0</span></div>
+        </div>
+        <button id="startBtn">Bắt đầu</button>
+        <button id="resetBtn" class="secondary">Đặt lại cao nhất</button>
+      </div>
+    </header>
+
+    <section id="game">
+      <canvas id="canvas" width="800" height="480"></canvas>
+      <div class="center-msg" id="overlay">
+        <div style="font-size:18px;font-weight:700">Nhấn Bắt đầu để chơi</div>
+        <div class="small">Nhắm và click vào vòng tròn vàng càng nhanh càng tốt. Lưu điểm cao bằng trình duyệt.</div>
+      </div>
+    </section>
+
+    <footer>
+      Gợi ý: Bạn có thể thay đổi thời gian chơi trong mã (default 30 giây). Điểm lưu ở <code>localStorage</code>.
+    </footer>
+  </div>
+
+  <script>
+    // --- Cấu hình ---
+    const GAME_TIME = 30; // giây
+    const CIRCLE_MIN = 20; // bán kính nhỏ nhất
+    const CIRCLE_MAX = 60; // bán kính lớn nhất
+
+    // --- DOM ---
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const overlay = document.getElementById('overlay');
+    const timeEl = document.getElementById('time');
+    const scoreEl = document.getElementById('score');
+    const bestEl = document.getElementById('best');
+
+    // --- Trạng thái trò chơi ---
+    let timeLeft = GAME_TIME;
+    let score = 0;
+    let best = parseInt(localStorage.getItem('catch_best') || '0', 10);
+    let running = false;
+    let circle = null; // {x,y,r}
+    let timerInterval = null;
+
+    bestEl.textContent = best;
+    timeEl.textContent = timeLeft;
+    scoreEl.textContent = score;
+
+    // Resize canvas internal resolution for crispness
+    function fitCanvas(){
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.round(rect.width * ratio);
+      canvas.height = Math.round(rect.height * ratio);
+      ctx.setTransform(ratio,0,0,ratio,0,0);
+    }
+    window.addEventListener('resize', fitCanvas);
+    fitCanvas();
+
+    function rand(min, max){return Math.random()*(max-min)+min}
+
+    function spawnCircle(){
+      const w = canvas.width / (window.devicePixelRatio||1);
+      const h = canvas.height / (window.devicePixelRatio||1);
+      const r = Math.round(rand(CIRCLE_MIN, CIRCLE_MAX));
+      const x = rand(r, w - r);
+      const y = rand(r, h - r);
+      circle = {x,y,r};
+    }
+
+    function draw(){
+      const w = canvas.width / (window.devicePixelRatio||1);
+      const h = canvas.height / (window.devicePixelRatio||1);
+      // background
+      ctx.clearRect(0,0,w,h);
+
+      // draw circle
+      if(circle){
+        // shadow glow
+        ctx.beginPath();
+        ctx.arc(circle.x, circle.y, circle.r+8, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255,204,0,0.08)';
+        ctx.fill();
+
+        // ring
+        ctx.beginPath();
+        ctx.arc(circle.x, circle.y, circle.r, 0, Math.PI*2);
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = '#ffcc00';
+        ctx.stroke();
+
+        // inner
+        ctx.beginPath();
+        ctx.arc(circle.x, circle.y, circle.r*0.5, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255,204,0,0.12)';
+        ctx.fill();
+      }
+
+      // optionally draw timer as a progress bar
+      const pct = timeLeft / GAME_TIME;
+      const barW = w * 0.9;
+      const barH = 6;
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      ctx.fillRect(w*0.05, h - 18, barW, barH);
+      ctx.fillStyle = 'rgba(255,204,0,0.9)';
+      ctx.fillRect(w*0.05, h - 18, barW * pct, barH);
+
+      requestAnimationFrame(draw);
+    }
+
+    canvas.addEventListener('click', (e)=>{
+      if(!running) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left);
+      const y = (e.clientY - rect.top);
+      if(circle){
+        const dx = x - circle.x;
+        const dy = y - circle.y;
+        if(Math.hypot(dx,dy) <= circle.r){
+          // hit!
+          score += Math.round(10 + (CIRCLE_MAX - circle.r)/3);
+          scoreEl.textContent = score;
+          // spawn a new circle and shorten next spawn time slightly by decreasing max radius randomness
+          spawnCircle();
+        }
+      }
+    });
+
+    function startGame(){
+      if(running) return;
+      running = true;
+      score = 0;
+      timeLeft = GAME_TIME;
+      scoreEl.textContent = score;
+      timeEl.textContent = timeLeft;
+      overlay.style.display = 'none';
+      spawnCircle();
+
+      // countdown
+      timerInterval = setInterval(()=>{
+        timeLeft -= 1;
+        timeEl.textContent = timeLeft;
+        if(timeLeft <= 0){
+          endGame();
+        }
+      },1000);
+    }
+
+    function endGame(){
+      running = false;
+      clearInterval(timerInterval);
+      overlay.style.display = 'block';
+      overlay.innerHTML = `<div style="font-size:20px;font-weight:700">Kết thúc! Điểm: ${score}</div><div class="small">Nhấn Bắt đầu để chơi lại</div>`;
+      if(score > best){
+        best = score;
+        localStorage.setItem('catch_best', String(best));
+        bestEl.textContent = best;
+        // show congrats
+        setTimeout(()=>{
+          overlay.innerHTML += '<div class="small" style="margin-top:8px;color:#ffd27a">🎉 Bạn đã lập kỷ lục mới!</div>';
+        },200);
+      }
+    }
+
+    startBtn.addEventListener('click', ()=>{
+      startGame();
+    });
+
+    resetBtn.addEventListener('click', ()=>{
+      if(confirm('Bạn có chắc muốn đặt lại điểm cao nhất không?')){
+        localStorage.removeItem('catch_best');
+        best = 0; bestEl.textContent = best;
+      }
+    });
+
+    // start draw loop
+    requestAnimationFrame(draw);
+  </script>
+</body>
+</html>
