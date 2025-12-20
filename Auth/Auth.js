@@ -19,7 +19,7 @@ function login() {
     let user = document.getElementById("username").value;
     let pass = document.getElementById("password").value;
 
-    if (user === "ngluan2005@gmail.com" && pass === "123") {
+    if (user === "luan@gmail.com" && pass === "123") {
 
         // Lưu thông tin đăng nhập
         localStorage.setItem("user", user);
