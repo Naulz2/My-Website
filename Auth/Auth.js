@@ -59,7 +59,7 @@ function login() {
   if (found) {
     localStorage.setItem("currentUser", JSON.stringify(found));
     alert("Đăng nhập thành công!");
-    window.location.href = "../index.html"; // chỉnh lại nếu cần
+    window.location.href = "../music.html";
   } else {
     alert("Sai tài khoản hoặc mật khẩu");
   }
