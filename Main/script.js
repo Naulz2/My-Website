@@ -25,3 +25,23 @@ function updateClock() {
 
 setInterval(updateClock, 1000);
 updateClock(); // Gọi lần đầu
+const toggleBtn = document.getElementById("themeToggle");
+
+// Load chế độ đã lưu
+if (localStorage.getItem("theme") === "dark") {
+  document.body.classList.add("dark");
+  toggleBtn.textContent = "☀️";
+}
+
+// Click đổi chế độ
+toggleBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark");
+
+  if (document.body.classList.contains("dark")) {
+    localStorage.setItem("theme", "dark");
+    toggleBtn.textContent = "☀️";
+  } else {
+    localStorage.setItem("theme", "light");
+    toggleBtn.textContent = "🌙";
+  }
+});
