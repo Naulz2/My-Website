@@ -16,14 +16,54 @@ body {
   padding: 0;
 }
 */
-body {
-  background-color: #333; /* Màu tối (dễ đọc) */
+/*body {
+  background-color: #333;
   color: #ffffff;
   font-family: 'Courier New', monospace;
   margin: 0;
   padding: 0;
   text-align: center !important;
 }
+*/
+
+body {
+  background: #f2f2f2;
+  color: #000;
+  transition: 0.3s;
+}
+
+.header {
+  background: #ffffff;
+  color: #000;
+}
+
+.result {
+  background: #fff;
+}
+
+body.dark {
+  background: #121212;
+  color: #e0e0e0;
+}
+
+body.dark .header {
+  background: #1f1f1f;
+}
+
+body.dark .search-bar input {
+  background: #2a2a2a;
+  color: white;
+  border: 1px solid #444;
+}
+
+body.dark .result {
+  background: #1f1f1f;
+}
+
+body.dark a {
+  color: #4da6ff;
+}
+
 /* Header tổng thể */
 .header {
   display: flex;
