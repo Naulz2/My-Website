@@ -29,7 +29,7 @@ body {
 body {
   background: #f2f2f2;
   color: #000;
-  text-align: center !important;
+  text-align: center;
   transition: 0.3s;
 }
 
@@ -45,6 +45,7 @@ body {
 body.dark {
   background: #121212;
   color: #e0e0e0;
+  text-align: center;
 }
 
 body.dark .header {
