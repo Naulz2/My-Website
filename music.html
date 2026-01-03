@@ -164,12 +164,11 @@
   </style>
 </head>
 <body>
-<button onclick="logout()">Đăng xuất</button>
+<button onclick="profile()">Thông tin tài khoản</button>
 
 <script>
-function logout() {
-    localStorage.removeItem("user");
-    window.location.href = "index.html";
+function profile() {
+    window.location.href = "Auth/profile.html";
 }
 </script>
 
