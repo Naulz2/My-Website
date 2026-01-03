@@ -18,7 +18,7 @@ function goHome() {
 // Đăng xuất
 function logout() {
   localStorage.removeItem("currentUser");
-  window.location.href = "Auth.html";
+  window.location.href = "../index.html";
 }
 
 // Xóa tài khoản
